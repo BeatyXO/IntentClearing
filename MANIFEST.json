@@ -1,0 +1,11 @@
+{
+  "name": "IntentClearing",
+  "version": "0.1.0-handoff",
+  "network": "studionet",
+  "chain_id": 61999,
+  "primary_contract": "contracts/intentclearing.py",
+  "consumer_contract": "contracts/clearing_gate.py",
+  "product_boundary": "standalone reusable Intelligent Contract primitive; no frontend",
+  "consensus_boundary": "independent single-order semantic profiling only",
+  "deterministic_boundary": "compatibility, ranking, partial fills, clearing, hashes, replay guards"
+}

@@ -1,0 +1,271 @@
+You are taking over a substantially implemented GenLayer Intelligent Contract repository named IntentClearing.
+
+Do not return only a plan, checklist, commentary, audit, or mockup. Inspect the entire unzipped repository first, then finish it to a review-ready state in the existing folder and push the completed work to the NEW IntentClearing GitHub repository URL supplied with this prompt.
+
+IMPORTANT REPOSITORY SAFETY
+
+Do NOT push this code into https://github.com/BeatyXO/Corroborate.git.
+That repository is already populated with a separate Corroborate Intelligent Contract project. Use a dedicated IntentClearing repository. If the target URL in your environment is still Corroborate, stop before any destructive push, keep all completed local work, and report the repository mismatch clearly rather than overwriting another project.
+
+Preserve the product architecture unless an actual GenLayer runtime/test failure proves a change is necessary.
+
+PRODUCT BOUNDARY
+
+IntentClearing is a standalone reusable Intelligent Contract primitive, not a full application. There must be no frontend.
+
+The primitive provides batch clearing for markets whose orders contain qualitative requirements that cannot be reduced to ordinary numeric price/quantity fields.
+
+Its defining architecture is:
+
+- a market owner creates a bounded market-local semantic attribute dictionary;
+- the dictionary is sealed and pinned by a non-empty definition_hash;
+- each order is profiled INDEPENDENTLY against that sealed dictionary;
+- the AI/LLM must never compare request A to offer B;
+- the AI/LLM must never choose a counterparty, winner, clearing priority, price, fill quantity, or settlement result;
+- REQUEST profiles contain required_mask, forbidden_mask, preferred_mask, and ambiguous_mask;
+- OFFER profiles contain present_mask, absent_mask, and ambiguous_mask;
+- validators independently re-profile the same single order and equivalence is based only on bounded semantic masks, not free-form rationale;
+- explicit numeric fields such as quantity and unit price remain deterministic user inputs and must never be inferred by the LLM;
+- deterministic_compatible performs all request/offer compatibility checks after profiling;
+- ambiguity must fail closed where it affects required or forbidden compatibility;
+- every active order in a frozen epoch must be assessed before clearing, preventing selective clearing around unassessed competitors;
+- the epoch freezes the active order set into epoch_hash;
+- clearing is deterministic from stored profiles, explicit numeric terms, and stable tie-break rules;
+- requests rank by maximum unit price descending, then submission time, then order ID;
+- compatible offers rank per request by preference score descending, ask price ascending, submission time, then order ID;
+- trade price is the offer ask;
+- quantities may partially fill;
+- every fill receives fill_hash and pins market_hash + epoch_hash;
+- settlement_root deterministically folds the produced fill hashes;
+- ClearingGate proves typed IC-to-IC reuse and must bind exact market_hash, epoch_hash, fill_hash, caller party membership, and one-time consumption/replay protection.
+
+Do NOT collapse this design into any of the following:
+
+- “AI decides who matches”;
+- pairwise semantic comparison between request and offer descriptions;
+- a generic LLM marketplace;
+- a semantic scheduler or lock manager;
+- a simple storage contract with an LLM wrapper;
+- a frontend product.
+
+The architectural distinction matters. The consensus layer produces reusable ONE-ORDER semantic profiles. The market clearing layer is deterministic.
+
+NON-NEGOTIABLE NETWORK
+
+Use stable Studionet only:
+
+- network alias: studionet
+- chain ID: 61999
+- RPC: https://studio.genlayer.com/api
+- explorer: https://explorer-studio.genlayer.com
+
+Do not move the project to studio-dev, Bradbury, Asimov, or another network just to make tooling easier.
+Before every live deployment/write workflow, verify the effective network and confirm chain ID 61999.
+
+REQUIRED WORK
+
+1. Read README.md, SUBMISSION.md, DEPLOYMENT.md, BUILD_STATUS.md, MANIFEST.json, every file under docs/, both contracts, every test, gltest.config.yaml, requirements-test.txt, pyproject.toml, the CI workflow, and scripts/preflight.py before editing.
+
+2. Run:
+   python scripts/preflight.py
+   immediately and record the real result.
+
+3. Install the repository's pinned Direct Mode tooling first. The handoff currently uses the same v0.29.2 genlayer-testing-suite baseline as the supplied stable-Studionet reference contracts. Verify compatibility with current stable Studionet before changing it. Do not upgrade just because a newer preview exists.
+
+4. Run all unit/static tests and all Direct Mode tests. Fix actual failures completely. Do not weaken tests merely to make them green.
+
+5. Review contracts/intentclearing.py line by line for current stable GenLayer SDK/runtime compatibility, including:
+   - storage-safe dataclasses and TreeMap/DynArray usage;
+   - u8/u32/u256 conversions;
+   - message timestamp handling;
+   - event declarations/emission;
+   - deterministic JSON hashing;
+   - custom validator semantics;
+   - run_nondet_unsafe behavior;
+   - malformed model-output handling;
+   - mask bounds and overlap checks;
+   - sorting/runtime support inside deterministic clearing;
+   - bounded execution under MAX_ORDERS_PER_SIDE and MAX_ATTRIBUTES;
+   - storage mutation/reassignment behavior;
+   - typed contract interfaces.
+
+6. Preserve the core validator-independence rule. Validators must independently run the same single-order semantic profiling job. Do not replace this with a format-only validator that merely checks the leader JSON shape.
+
+7. Preserve the strict AI boundary. Search the final contract and tests for any path where the model compares two orders, chooses a match, chooses a price, chooses quantity, or controls ordering. There should be none.
+
+8. Review fail-closed behavior. At minimum:
+   - malformed output cannot produce positive capabilities;
+   - out-of-range mask bits are rejected/fail closed;
+   - overlapping masks are rejected/fail closed;
+   - offer ambiguity on a required or forbidden request dimension blocks compatibility;
+   - unresolved ambiguity in the request itself must not silently create a permissive match;
+   - a missing capability claim must never become PRESENT merely because it was omitted.
+
+9. Review deterministic clearing rules carefully. Prove with tests that:
+   - ask > request max price cannot match;
+   - all required bits must be present;
+   - forbidden present bits reject the pair;
+   - preferences affect ranking only, not hard compatibility;
+   - higher preference score outranks a cheaper compatible offer under the documented rule;
+   - equal scores fall through to lower ask, then earlier submission, then lower ID;
+   - partial fills update both sides correctly;
+   - filled orders cannot be reused later in the same clear;
+   - the same frozen inputs always produce the same fills and settlement root.
+
+10. Preserve the no-selective-clearing rule. A frozen epoch must not clear while any non-cancelled order remains PROFILE_PENDING.
+
+11. Review cancellation/freeze lifecycle:
+   - only the order owner can cancel;
+   - cancellation is allowed only before freeze;
+   - no new orders are admitted after freeze;
+   - cancelled orders do not enter epoch_hash as active orders;
+   - market definition cannot mutate after seal.
+
+12. Review replay/index protection:
+   - duplicate client_order_hash must be rejected;
+   - client hashes must remain exact 32-byte lowercase hex digests;
+   - fill IDs/hashes must be immutable;
+   - ClearingGate must reject a repeated action hash;
+   - ClearingGate must also reject a second consumption of the same fill by the same party even with a fresh action hash.
+
+13. Review contracts/clearing_gate.py and make sure it performs real typed IC-to-IC reads. The consumer must check:
+   - fill_id;
+   - exact expected market_hash;
+   - exact expected epoch_hash;
+   - exact expected fill_hash;
+   - caller is request_owner or offer_owner;
+   - fill/party consumption replay is blocked.
+
+14. Add any missing adversarial Direct Mode tests a reviewer would reasonably expect. Include at least coverage for:
+   - prompt-injection text embedded inside market attributes/order descriptions;
+   - forged leader semantic masks rejected by an independently disagreeing validator;
+   - malformed JSON;
+   - non-integer masks;
+   - masks with undefined bits;
+   - overlapping masks;
+   - request ambiguity;
+   - offer ambiguity on required attributes;
+   - offer ambiguity on forbidden attributes;
+   - required capability missing;
+   - forbidden capability present;
+   - exact bid/ask boundary;
+   - over-budget ask;
+   - deterministic preference tie-breaks;
+   - deterministic price/time/ID tie-breaks;
+   - partial fills across multiple offers;
+   - an offer exhausted by an earlier request;
+   - duplicate client_order_hash;
+   - freeze with pending profiles then clear rejection;
+   - cancellation authorization;
+   - post-freeze cancellation rejection;
+   - post-freeze new-order rejection;
+   - wrong market hash at consumer;
+   - wrong epoch hash at consumer;
+   - wrong fill hash at consumer;
+   - non-party consumer rejection;
+   - action replay rejection;
+   - same-fill same-party replay with a new action hash.
+
+15. Do not invent deployment proof, contract addresses, transaction hashes, passing test counts, validator results, or CI results.
+
+GITHUB
+
+The final target must be a dedicated IntentClearing repository, not BeatyXO/Corroborate.
+Inspect the target repository first and use its actual default branch. Do not assume main vs master.
+
+Once local tests are green:
+
+16. Commit and push the implementation.
+17. Inspect the resulting GitHub repository after push.
+18. Inspect CI if present. If CI fails, read the logs, fix the actual problem, commit, push, and continue until every fix that can be completed without external secrets/wallet interaction is done.
+19. Do not leave generated caches, virtualenvs, .env, private keys, build artefacts, or unrelated files tracked.
+
+LIVE STUDIONET PROOF
+
+After Direct Mode is green, perform a real stable Studionet lifecycle on chain 61999.
+
+The final live proof should demonstrate at least:
+
+- IntentClearing deploys successfully on chain 61999;
+- a market is created;
+- at least three meaningful semantic attributes are added;
+- the market is sealed and returns a non-empty 64-hex definition_hash;
+- an epoch is opened and pins that market hash;
+- at least one request and at least two competing offers are submitted with distinct client_order_hash values;
+- real consensus profiles the request independently;
+- real consensus profiles each offer independently;
+- at least one case demonstrates semantic preference ranking, not only price ranking;
+- the epoch is frozen and returns a non-empty 64-hex epoch_hash;
+- clear_epoch creates deterministic fills without an LLM call deciding counterparties;
+- at least one fill exposes a non-empty 64-hex fill_hash;
+- settlement_root is non-empty and deterministic;
+- ClearingGate is deployed with the finalized IntentClearing address;
+- correctly pinned party consumption succeeds;
+- wrong market hash is rejected;
+- wrong epoch hash is rejected;
+- wrong fill hash is rejected;
+- non-party consumption is rejected;
+- action replay is rejected;
+- same fill + same party cannot be consumed twice using a different action hash.
+
+If the current stable tooling requires fee estimation before writes, use the supported stable Studionet fee-estimation flow. Do not switch networks as a workaround.
+
+If a live write is genuinely blocked by unavailable signing credentials or wallet funding, do not fabricate success. Complete every other repository/test/documentation task, preserve the exact command/error evidence, and report that single remaining external blocker accurately.
+
+FINAL DOCUMENTATION
+
+Update DEPLOYMENT.md only with evidence actually produced:
+
+- finalized IntentClearing address;
+- IntentClearing deployment transaction;
+- finalized ClearingGate address;
+- ClearingGate deployment transaction;
+- market creation transaction;
+- attribute/seal transactions as applicable;
+- definition_hash;
+- epoch open/freeze transactions;
+- epoch_hash;
+- request/offer submission transactions;
+- semantic assessment transactions;
+- clearing transaction;
+- fill IDs + fill hashes;
+- settlement_root;
+- successful gate-consumption transaction;
+- rejected wrong-hash/non-party/replay evidence;
+- exact test commands and real pass counts;
+- exact stable network verification output;
+- final Git commit SHA.
+
+Update SUBMISSION.md and README.md only to reflect the final verified behavior. Keep the explanation reviewer-friendly and emphasize the architecture split: consensus-backed one-order semantic normalization, deterministic market clearing.
+
+FINAL GATES
+
+Before the final push/claim of completion:
+
+- python scripts/preflight.py must pass;
+- Python compilation must pass;
+- unit/static tests must pass;
+- all Direct Mode tests must pass;
+- the live Studionet lifecycle should pass if signing/funding is available;
+- no secrets/private keys/.env/venvs/caches/build artifacts may be tracked;
+- there must be no frontend;
+- every network reference must remain stable Studionet / chain 61999;
+- inspect git diff;
+- inspect git status;
+- inspect tracked files;
+- inspect the final GitHub repository after push;
+- inspect CI and fix failures that are actionable.
+
+Do not claim completion until all applicable checks actually pass and the correct remote repository contains the final committed code.
+
+At the end, report:
+
+1. exactly what changed;
+2. real unit/Direct Mode test results;
+3. real live Studionet results;
+4. final IntentClearing and ClearingGate addresses, if deployed;
+5. real transaction evidence;
+6. definition_hash, epoch_hash, fill_hash(es), settlement_root;
+7. final Git commit SHA;
+8. CI status;
+9. any genuine limitation that remains.

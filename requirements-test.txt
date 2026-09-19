@@ -1,0 +1,2 @@
+# Stable Studionet baseline used by the reference high-scoring ICs supplied for this handoff.
+genlayer-test @ git+https://github.com/genlayerlabs/genlayer-testing-suite@v0.29.2
