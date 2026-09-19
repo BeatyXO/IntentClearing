@@ -58,4 +58,4 @@ Stable Studionet only:
 
 ## Current package status
 
-The pinned `genlayer-testing-suite` v0.29.2 runs locally in Direct Mode. Current verification is recorded in `DEPLOYMENT.md`; it includes preflight, Python compilation, unit/static tests, and adversarial Direct Mode coverage. No live Studionet addresses or transaction hashes are claimed because the RPC was unreachable during read-only funding checks. The extracted working folder still needs publication to a dedicated IntentClearing repository; it must never be pushed to `BeatyXO/Corroborate`.
+The pinned `genlayer-testing-suite` v0.29.2 runs locally in Direct Mode. Current verification is recorded in `DEPLOYMENT.md`; it includes preflight, Python compilation, unit/static tests, and adversarial Direct Mode coverage. IntentClearing has been deployed on stable Studionet and market setup is in progress. The deployment address and verified transactions are documented there; no unproduced lifecycle evidence is claimed. The dedicated `BeatyXO/IntentClearing` repository exists; its first push awaits a GitHub token with permission to publish the existing CI workflow. It must never be pushed to `BeatyXO/Corroborate`.
