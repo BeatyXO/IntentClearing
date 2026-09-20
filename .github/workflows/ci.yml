@@ -10,4 +10,16 @@ jobs:
       - run: python scripts/preflight.py
       - run: pip install -r requirements-test.txt
       - run: pytest tests/unit -q
+      # gltest v0.29.2 looks for genvm-universal.tar.xz, while the current
+      # GenVM release publishes the same runners as genvm-runners-all.tar.xz.
+      # Seed the pinned release in the loader's cache under its expected name.
+      - name: Prepare pinned Direct Mode runner bundle
+        run: |
+          cache_dir="$HOME/.cache/gltest-direct"
+          mkdir -p "$cache_dir"
+          bundle="$cache_dir/genvm-universal-v0.3.0-rc7.tar.xz"
+          curl --fail --location --silent --show-error \
+            https://github.com/genlayerlabs/genvm/releases/download/v0.3.0-rc7/genvm-runners-all.tar.xz \
+            --output "$bundle"
+          echo "e218a1854214681560351051f76fe2b878545cf3409455ef372d57014a88ca67  $bundle" | sha256sum --check
       - run: pytest tests/direct -q
