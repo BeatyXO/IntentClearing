@@ -7,10 +7,6 @@ import sys
 
 
 def pytest_configure():
-    if os.name != "nt":
-        return
-
-    from gltest.direct import loader
     from gltest.direct.vm import VMContext
 
     original_refresh_gl_message = VMContext._refresh_gl_message
@@ -23,6 +19,11 @@ def pytest_configure():
             raw_message["datetime"] = vm._datetime
 
     VMContext._refresh_gl_message = refresh_gl_message_with_timestamp
+
+    if os.name != "nt":
+        return
+
+    from gltest.direct import loader
 
     original_load_contract_class = loader.load_contract_class
 
