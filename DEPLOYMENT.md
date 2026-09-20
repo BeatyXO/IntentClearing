@@ -1,49 +1,52 @@
 # Deployment evidence and verification status
 
-Target: stable Studionet, chain ID **61999**, RPC `https://studio.genlayer.com/api`.
+Target network: stable Studionet (`studionet`), chain ID **61999**, RPC `https://studio.genlayer.com/api`, explorer `https://explorer-studio.genlayer.com`.
 
-The IntentClearing contract and the start of a market lifecycle have been verified on stable Studionet. The complete requested lifecycle has not yet been run.
-
-## Local verification performed
+## Local verification
 
 - `python scripts/preflight.py` — PASS.
 - `python -m compileall -q contracts tests` — PASS.
 - `python -m pytest tests/unit -q` — PASS, 8 tests.
-- `python -m pytest tests/direct -q` — PASS, 26 tests using `genlayer-test 0.29.2`.
-- `requirements-test.txt` pins `genlayer-testing-suite` v0.29.2. The installed package is v0.29.2; it was not upgraded to preview tooling.
+- `python -m pytest tests/direct -q` — PASS, 26 tests using the pinned `genlayer-testing-suite` v0.29.2.
+- No preview network or preview tooling was used.
 
-## Stable Studionet verification
+## Final IntentClearing lifecycle
 
-The CLI reported alias `studionet`, chain ID `61999`, RPC `https://studio.genlayer.com/api` immediately before deployment and the market writes. The CLI currently names `https://genlayer-explorer.vercel.app` as its explorer; the project’s required explorer is `https://explorer-studio.genlayer.com`.
+The CLI verified alias `studionet`, chain ID `61999`, and RPC `https://studio.genlayer.com/api`. Transactions below were observed finalized with `genlayer receipt`.
 
-The read-only account query succeeded for the selected, unlocked account and reported 100 GEN. The following transactions were accepted by consensus and later reported `FINALIZED` by `genlayer receipt`:
+| Operation | Result |
+|---|---|
+| IntentClearing deployment | `0xd8A1F3888C5a15F685a690438436CC6FaA1A3443`; tx `0x6b0add62049529b25249e025eef7f2c14267ee200303aad773f7403c1c91f0b6` |
+| Create market 1 | tx `0x5626324d84fee94ce6f28894a120ae88c3a0828861f272d4ec7c09dcb8037d4c` |
+| Add `UPGRADEABLE` | tx `0x5b57a7e575b0165d739919adbabd3e8d042957702f65ea365393effd10834cfd` |
+| Add `SOLIDITY` | tx `0x6ebe40e7aac5acf8890a5d7677dec7ca7bcf232413083e8cb6c0a4613fd34d18` |
+| Add `RUSH` | tx `0x42b0887dc974cb34ac6e435cfe96ff4bec2f2a2a51ae28c1426ef7bba4a12f69` |
+| Seal market | tx `0x4819134e4944d7f47d76af53b5433d92d39cf578a215347a6041ebfa42e85881`; `definition_hash` `eb7e859a3899de73f36cf55475021e8c5c69f1fa72975f75ca86c911fb2ed288` |
+| Open epoch 1 | tx `0xc9c3919f5746caa68e1fd01387f597c862790a3a52bd57eb2c1576846f5eb591` |
+| Submit request 1 (bid 5000) | tx `0xe0e870f93731a4c9b811723279db68c5c13fc5fa84aa9677c9b3a39faacafa87` |
+| Submit rush offer 2 (ask 4000) | tx `0x3171b1de57aabc4149955ccbefdd83ed0bfd1a028314c3b8e462868ba5200a9e` |
+| Submit non-rush offer 3 (ask 3500) | tx `0x819dc6997d241e3e4be1074af29bebf69e5423376027a750aaf2c1876c9cd391` |
+| Consensus assessment, request 1 | tx `0x027d79b3599d3864f558cf0c1445e516314cae8d3e30012a0044d64be6e635`; required mask 3, preferred mask 4, ambiguous mask 0 |
+| Consensus assessment, offer 2 | tx `0xba8677b4e43f95cb0ae7fdac4b9356ec1adb05d3b0dd5e4bdcc6965702f2e0c1`; present mask 7, ambiguous mask 0 |
+| Consensus assessment, offer 3 | tx `0x1e39fba6a4171c13e0e31a0ea815eabb3b641639e4dd634b2921aaad6ec0786b`; present mask 3, absent mask 4, ambiguous mask 0 |
+| Freeze epoch | tx `0xf6b51573c5efafc933baa45dae2204d8a0dc55485b0d708a12da1a7de4851ba8`; `epoch_hash` `2ea89e74623866548d24d2e614688efba7f349e89a65348311cbf33d24433ae5` |
+| Deterministic clear | tx `0x5046d4b3c0ef367c12e35c28451a8bd8d62679d673e43582060a0285ce131239`; created one fill; `settlement_root` `c46e4103b2ce75a5b40af5880a4345d9ca17babb386e97e15632d2b1c5aa1e1b` |
 
-- IntentClearing deployment: `0xb9f29a54ba42e6ee4b14a468cdc1c6327c3c132d017912c8e1c8d43c430f6931`; address `0x949ddCdf53DDbF0931eCcd37dde0De50EF787376`.
-- Market 1 creation: `0x652fdf6d0b9bd995719fe4243a893eda1e88bd98f965264d61f9848a40df4a0c`.
-- First attribute (`UPGRADEABLE`): `0xc65dff5e4a593690605a53a9f304308380a9d1c4dd57e550f6afe758488c0a8e`.
+Fill 1 maps request 1 to offer 2, quantity 1, ask/trade price 4000, preference score 1. This verifies that the semantically preferred rush offer ranked ahead of the cheaper non-rush offer. Fill hash: `e47e6aeef2af86ae28aca4cce9eff1f1baded7079077ab5651e4eb90a5ff2aa0`.
 
-The market read after creation confirmed ID 1 and the intended name/semantics. Attribute 1 was finalized. No definition hash, epoch, orders, semantic assessments, clearing result, fills, settlement root, or ClearingGate deployment have been produced yet.
+## ClearingGate evidence
 
-The command `genlayer estimate-fees --json` failed with `TypeError: client.estimateTransactionFees is not a function`. The CLI’s normal `deploy` and first `write` commands nevertheless returned accepted transactions that finalized; no explicit `--fees` or `--fee-value` override was supplied. The next `add_attribute` command prompted for a keystore decryption password and returned no transaction hash. Do not report it as submitted.
+- Deployment: `0x20E26FA22a6163e8c835320028C7ba00231774c6`; tx `0xa652d6be87c3e7fa4fd154671c92e4d2222e727c2221cb74e77d08654ad4f2b2`.
+- A fill party consumed the fill with the exact market, epoch, and fill pins: tx `0xc34dd153fb113c58fc47d086f6df9e991b18d377efaec152a5388c6a9984f4f8` finalized. A read-only `is_fill_valid` check with those pins returned true.
+- The attempted wrong-market case used the correct market hash and therefore hit the already-consumed-party guard. It is **not** evidence of wrong-hash rejection.
+- Wrong-market, wrong-epoch, wrong-fill, non-party, repeated-action, and fresh-action same-fill/same-party live rejection transactions remain unverified. The latest RPC balance lookup failed with `fetch failed` after `genlayer network info` confirmed the required stable network. No rejection transaction is claimed here.
 
-## Repository delivery status
+An earlier separate deployment and partial market setup preceded the final deployment above. They are superseded and are not the final lifecycle evidence.
 
-The dedicated public repository [BeatyXO/IntentClearing](https://github.com/BeatyXO/IntentClearing) was created after verifying that `BeatyXO/Corroborate` is a separate repository on `master`. GitHub reports the IntentClearing configured initial branch as `main`. Local commit `5dec3b354fed3d6c44fa2503d1d5f0a931929f64` contains the implementation. Push was rejected because the authenticated BeatyXO OAuth token lacks the `workflow` scope needed to publish `.github/workflows/ci.yml`. A GitHub device authorization request for that scope is waiting for account approval. No changes have been made to Corroborate.
+## Tooling note
 
-## Required final evidence
+`genlayer estimate-fees --json` returned `TypeError: client.estimateTransactionFees is not a function`. Normal deployment and write commands were accepted and finalized without explicit fee overrides. No fee-estimation success is claimed.
 
-- IntentClearing address + deployment tx
-- ClearingGate address + deployment tx
-- sealed market ID + definition hash
-- epoch ID + epoch hash
-- request and offer submission txs
-- semantic assessment txs demonstrating real consensus
-- deterministic clearing tx
-- fill ID/hash + settlement root
-- successful correctly pinned ClearingGate consumption tx
-- wrong-market-hash rejection
-- wrong-epoch-hash rejection
-- non-party rejection
-- replay rejection
-- exact test commands and real pass counts
-- final Git commit SHA
+## Repository and CI delivery
+
+The dedicated repository is [BeatyXO/IntentClearing](https://github.com/BeatyXO/IntentClearing), configured on `main`. The separate `BeatyXO/Corroborate` repository was not changed. A push of `.github/workflows/ci.yml` previously required the GitHub OAuth `workflow` scope. The current local `gh auth status` reports the BeatyXO token invalid; a new browser login attempt could not reach GitHub because network access was denied. Consequently this checkout's latest commits are not verified on GitHub and remote CI has not run. No final GitHub commit SHA or CI result is claimed.

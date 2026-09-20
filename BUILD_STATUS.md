@@ -1,6 +1,6 @@
 # Build status
 
-The local handoff now includes strict profile-field validation, exact lowercase digest validation, fill hashes that explicitly include both market and epoch pins, and additional offline checks for mask shape, digest format, prompt injection handling, and the one-order AI boundary.
+The local handoff includes strict profile-field validation, exact lowercase digest validation, fill hashes that explicitly include both market and epoch pins, and checks for mask shape, digest format, prompt injection handling, and the one-order AI boundary.
 
 Verified locally:
 
@@ -9,10 +9,10 @@ Verified locally:
 - `python -m pytest tests/unit -q` — PASS, 8 tests.
 - `python -m pytest tests/direct -q` — PASS, 26 tests on pinned genlayer-test v0.29.2.
 
-Live progress and remaining blockers:
+Live lifecycle and remaining delivery blockers:
 
-- IntentClearing is finalized at `0x949ddCdf53DDbF0931eCcd37dde0De50EF787376`. Market 1 creation and its first `UPGRADEABLE` attribute are also finalized; see `DEPLOYMENT.md` for transactions.
-- The next write prompted for the wallet keystore password and produced no transaction hash. Sealing, epoch/orders, assessments, clearing, fills, and ClearingGate are not yet verified.
-- Public `BeatyXO/IntentClearing` exists on configured branch `main`. Local commit `5dec3b354fed3d6c44fa2503d1d5f0a931929f64` is not pushed: GitHub rejected the workflow file because the active token lacks `workflow` scope. Device authorization is pending. Remote CI is therefore not available yet.
+- Final IntentClearing deployment and a complete semantic-profile/clear lifecycle are finalized on stable Studionet; the preferred rush offer wins over the cheaper offer. Final addresses, hashes, and transactions are in `DEPLOYMENT.md`.
+- ClearingGate is deployed and the correctly pinned fill consumption by a party finalized. Live rejection receipts for wrong pins, non-party, and replay remain unverified; the previous wrong-market attempt actually used the correct market hash.
+- Public `BeatyXO/IntentClearing` exists on `main`, but current local `gh auth status` reports its token invalid. The push and remote CI remain blocked until GitHub CLI authentication is restored with the `workflow` scope. The Corroborate repository was not touched.
 
-See `DEPLOYMENT.md` for the exact finalized deployment and market transaction evidence, plus the remaining live-chain blockers.
+See `DEPLOYMENT.md` for exact finalized lifecycle evidence and the remaining live rejection and GitHub delivery blockers.
