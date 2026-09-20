@@ -38,8 +38,14 @@ Fill 1 maps request 1 to offer 2, quantity 1, ask/trade price 4000, preference s
 
 - Deployment: `0x20E26FA22a6163e8c835320028C7ba00231774c6`; tx `0xa652d6be87c3e7fa4fd154671c92e4d2222e727c2221cb74e77d08654ad4f2b2`.
 - A fill party consumed the fill with the exact market, epoch, and fill pins: tx `0xc34dd153fb113c58fc47d086f6df9e991b18d377efaec152a5388c6a9984f4f8` finalized. A read-only `is_fill_valid` check with those pins returned true.
-- The attempted wrong-market case used the correct market hash and therefore hit the already-consumed-party guard. It is **not** evidence of wrong-hash rejection.
-- Wrong-market, wrong-epoch, wrong-fill, non-party, repeated-action, and fresh-action same-fill/same-party live rejection transactions remain unverified. The latest RPC balance lookup failed with `fetch failed` after `genlayer network info` confirmed the required stable network. No rejection transaction is claimed here.
+- Stable Studionet rejection attempts using valid 64-character digest strings finalized with `leader_receipt.execution_result = ERROR`; follow-up `was_consumed` reads confirmed they did not consume their fresh action hashes:
+  - Wrong market: tx `0x370e6595f69aa89b4c4e4f0ddd4d74a1703adb8775d312e2b5bce1836cbb2949`; action `5555…5555` remains unconsumed.
+  - Wrong epoch: tx `0x2c5edddc6734f86431e43727f46c7fa9f81148135843bc85ef7a89effec8069b`; action `6666…6666` remains unconsumed.
+  - Wrong fill: tx `0xfc499722af92f0f73e733d908caa2fc6eaca723f898b833487f31428ea012198`; action `a888…8888` remains unconsumed.
+  - Non-party with exact pins: tx `0x1ea7c377f54de867146b62b1c95e71dc5dd5c32cc7c62f575947c01f35ebc7dd`; action `b999…9999` remains unconsumed.
+  - Repeated action: tx `0x3e7805ae0caa419cd9d7e31d942e0826477ef97aecff4b0164370220bfa85f09`; pre- and post-reads show the original action `007ff0…acd00` remains consumed.
+  - Same fill + same party with a fresh action: tx `0xb91a7831935bcf79199610f68c3a538e6913d0615ed5bc1910c9b179b6e0f6b8` finalized; action `82b1…1871` remains unconsumed.
+- The CLI did not expose the GenVM user-error text in these receipts; the evidence above is the finalized transaction status and post-call consumed-state reads. An earlier all-numeric wrong-market argument was parsed by the CLI as integer `0` and is excluded from the wrong-hash evidence.
 
 An earlier separate deployment and partial market setup preceded the final deployment above. They are superseded and are not the final lifecycle evidence.
 
