@@ -9,10 +9,10 @@ Verified locally:
 - `python -m pytest tests/unit -q` — PASS, 8 tests.
 - `python -m pytest tests/direct -q` — PASS, 26 tests on pinned genlayer-test v0.29.2.
 
-Live lifecycle and remaining delivery blockers:
+Verified live lifecycle and delivery:
 
 - Final IntentClearing deployment and a complete semantic-profile/clear lifecycle are finalized on stable Studionet; the preferred rush offer wins over the cheaper offer. Final addresses, hashes, and transactions are in `DEPLOYMENT.md`.
 - ClearingGate is deployed; correct party consumption finalized. Wrong-market, wrong-epoch, wrong-fill, non-party, repeated-action, and same-fill/same-party replay calls also finalized with execution errors, and post-call reads confirmed no new action consumption. The earlier all-numeric digest attempt was malformed by CLI parsing and was excluded.
-- Public `BeatyXO/IntentClearing` exists on `main`, but current local `gh auth status` reports its token invalid. The push and remote CI remain blocked until GitHub CLI authentication is restored with the `workflow` scope. The Corroborate repository was not touched.
+- Public `BeatyXO/IntentClearing` is on `main`; the Corroborate repository was not touched. GitHub Actions run `35505058611` passed on implementation commit `f5e2c740a4542c5b3c8e54385f2129c76fa87f9a`, including preflight, unit, and Direct Mode jobs.
 
-See `DEPLOYMENT.md` for exact finalized lifecycle evidence and the remaining live rejection and GitHub delivery blockers.
+See `DEPLOYMENT.md` for exact finalized lifecycle and CI evidence.

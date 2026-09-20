@@ -52,10 +52,10 @@ Stable Studionet only:
 - `docs/ARCHITECTURE.md` — design and clearing rules
 - `docs/INVARIANTS.md` — reviewer-facing invariants
 - `docs/THREAT_MODEL.md` — failure model
-- `DEPLOYMENT.md` — live proof template; no invented evidence
+- `DEPLOYMENT.md` — verified stable-Studionet lifecycle and CI evidence
 - `SUBMISSION.md` — submission-facing summary
 - `scripts/preflight.py` — static final gate
 
 ## Current package status
 
-The pinned `genlayer-testing-suite` v0.29.2 runs locally in Direct Mode. Verified results and live evidence are recorded in `DEPLOYMENT.md`. IntentClearing and ClearingGate completed a stable-Studionet lifecycle: independently profiled request/offers were frozen and cleared deterministically, and the preferred rush offer ranked ahead of a cheaper offer. Live invalid-pin, non-party, and replay attempts finalized without consuming fresh action hashes. The dedicated `BeatyXO/IntentClearing` repository exists; pushing and remote CI are blocked because the local GitHub CLI token is invalid and needs the `workflow` scope. This project must never be pushed to `BeatyXO/Corroborate`.
+The pinned `genlayer-testing-suite` v0.29.2 runs locally in Direct Mode. Verified results and live evidence are recorded in `DEPLOYMENT.md`. IntentClearing and ClearingGate completed a stable-Studionet lifecycle: independently profiled request/offers were frozen and cleared deterministically, and the preferred rush offer ranked ahead of a cheaper offer. Live invalid-pin, non-party, and replay attempts finalized without consuming fresh action hashes. The dedicated `BeatyXO/IntentClearing` repository is on `main`, and GitHub Actions run `35505058611` passed preflight, unit, and Direct Mode checks. This project must never be pushed to `BeatyXO/Corroborate`.
